@@ -19,5 +19,5 @@
 <script setup>
 import { defineEmits } from "vue";
 
-const emit = defineEmits(["close", "added"]);
+const emit = defineEmits(["close"]);
 </script>

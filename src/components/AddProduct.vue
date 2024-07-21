@@ -6,6 +6,7 @@
       label="Product Description"
       type="text"
     />
+    <FormField @change="onFileChange" label="Select Image" type="file" />
     <div class="mb-4">
       <label for="main-category" class="block text-sm font-medium text-gray-700"
         >Main Category</label
@@ -68,31 +69,37 @@ const props = defineProps({
 const product = reactive({
   title: "",
   description: "",
+  image: "",
   category: {
     main: "",
     sub: "",
   },
   price: 0,
 });
+const onFileChange = (event) => {
+  product.file = event.target.files[0];
+};
 
 const addProduct = async () => {
   try {
-    const data = {
-      title: product.title,
-      description: product.description,
-      category: product.category,
-      price: product.price,
-    };
+    const formData = new FormData();
+    formData.append("title", product.title);
+    formData.append("description", product.description);
+    formData.append("category", product.category);
+    formData.append("price", product.price);
+    if (product.file) {
+      formData.append("file", product.file);
+    }
+
     const response = await axios.post(
       "http://localhost:4000/api/v1/product/create",
-      data
+      formData
     );
     if (response.status === 200) {
       console.log("response :", response);
-      emit("added");
       // Close the popup and refresh the products list
+      emit("added");
       emit("close");
-      router.go(0); // Refresh the page
     }
   } catch (error) {
     console.error("Error adding product:", error);

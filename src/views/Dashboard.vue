@@ -14,11 +14,13 @@
             Add Category
           </button>
           <Modal
-            v-if="addCategoryPopup"
-            @close="addCategoryPopup = false"
-            @added="addCategoryPopup = false"
+            v-if="addProductPopup"
+            @close="closeCategoryPopup"
           >
-            <AddCategory />
+            <AddCategory
+              @close="closeCategoryPopup"
+              @added="getCategories"
+            ></AddCategory>
           </Modal>
         </div>
         <div v-if="loading" class="text-center">Loading...</div>
@@ -45,11 +47,12 @@
           <Modal
             v-if="addProductPopup"
             @close="addProductPopup = false"
-            @added="addProductPopup = false"
           >
             <AddProduct
               :main-categories="uniqueCategories"
               :sub-categories="uniqueSubCategories"
+              @close="addProductPopup = false"
+              @added="getProducts"
             />
           </Modal>
         </div>
@@ -140,30 +143,50 @@ const uniqueSubCategories = ref([]);
 const addCategoryPopup = ref(false);
 const addProductPopup = ref(false);
 
+const getCategories = async () => {
+  console.log("getttttttttt");
+  const url = "http://localhost:4000/api/v1/category/get-all-categories";
+  await axios
+    .get(url)
+    .then((res) => {
+      categories.value = res.data.categories;
+      const categoryType = res.data.categories.map((cat) => cat.type);
+      const subCategoryType = res.data.categories.map((cat) => cat.subType);
+      uniqueCategories.value = [...new Set(categoryType)];
+      uniqueSubCategories.value = [...new Set(subCategoryType)];
+    })
+    .catch((err) => {
+      console.log("error : ", err);
+    });
+};
+
+const getProducts = async () => {
+  const url = "http://localhost:4000/api/v1/product/get";
+  await axios
+    .get(url)
+    .then((res) => {
+      products.value = res.data.products;
+    })
+    .catch((err) => {
+      console.log("error : ", err);
+    });
+};
+
 onMounted(async () => {
   try {
-    const [categoriesResponse, productsResponse] = await Promise.all([
-      axios.get("http://localhost:4000/api/v1/category/get-all-categories"),
-      axios.get("http://localhost:4000/api/v1/product/get"),
-    ]);
-    categories.value = categoriesResponse.data.categories;
-    products.value = productsResponse.data.products;
-    const categoryType = categoriesResponse.data.categories.map(
-      (cat) => cat.type
-    );
-    const subCategoryType = categoriesResponse.data.categories.map(
-      (cat) => cat.subType
-    );
-    uniqueCategories.value = [...new Set(categoryType)];
-    uniqueSubCategories.value = [...new Set(subCategoryType)];
-
-    console.log("data :", categories.value, products.value);
+    getCategories();
+    getProducts();
   } catch (error) {
     console.error(error);
   } finally {
     loading.value = false;
   }
 });
+
+const closeCategoryPopup = () => {
+  addCategoryPopup.value = false;
+};
+// console.log("addCategoryPopup : ", addCategoryPopup.value);
 
 const filterSubCategories = () => {
   if (selectedCategory.value) {

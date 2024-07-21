@@ -6,6 +6,11 @@
       label="Category Description"
       type="text"
     />
+    <FormField
+      @change="onFileChange"
+      label="Select Image"
+      type="file"
+    />
     <FormField v-model="category.type" label="Category Type" type="text" />
     <FormField
       v-model="category.subType"
@@ -22,41 +27,55 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref, defineEmits } from "vue";
 import axios from "axios";
 import FormField from "./FormField.vue";
 import { useRouter } from "vue-router";
-const router = useRouter();
 
+const router = useRouter();
 const category = reactive({
   title: "",
   description: "",
+  file: null,
   type: "",
   subType: "",
 });
+const emit = defineEmits(["added, close"]);
+
+const onFileChange = (event) => {
+  category.file = event.target.files[0];
+};
 
 const addCategory = async () => {
   try {
-    const data = {
-      title: category.title,
-      description: category.description,
-      type: category.type,
-      subType: category.subType,
-    };
+    const formData = new FormData();
+    formData.append('title', category.title);
+    formData.append('description', category.description);
+    formData.append('type', category.type);
+    formData.append('subType', category.subType);
+    if (category.file) {
+      formData.append('file', category.file);
+    }
+
     const response = await axios.post(
       "http://localhost:4000/api/v1/category/create",
-      data
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
+
     if (response.status === 200) {
-      console.log("response :", response);
+      // console.log("response :", response);
       emit("added");
       emit("close");
-      router.go(0);
+      // router.go(0);
     }
   } catch (error) {
     console.error("Error adding category:", error);
   }
 };
 
-const emit = defineEmits(["added"]);
 </script>

@@ -5,7 +5,7 @@
     </div>
     <div class="px-6 py-2">
       <img
-        src="https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+        :src="category.image"
         alt=""
         class="w-full h-40 object-cover rounded"
       />
